@@ -17,9 +17,9 @@
 <div class="box">
 <div>Empresa:<br><input type="text"></div>
 <div>Data:<br><input type="date"></div>
-<div>Marca:<br><input type="text"></div>
-<div>Horímetro:<br><input type="number"></div>
 <div>Cidade:<br><input type="text"></div>
+<div>Horímetro:<br><input type="number"></div>
+<div>Marca:<br><input type="text"></div>
 <div>Modelo:<br><input type="text"></div>
 <div>Motor:<br><input type="text"></div>
 <div>Chassis:<br><input type="text"></div>
@@ -30,6 +30,11 @@
 <h3>Peças aplicadas</h3>
 <table>
 <tr><th style="width:15%">Qntd</th><th style="width:25%">Código</th><th>Descrição</th></tr>
+<tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+<tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+<tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+<tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+<tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
 <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
 <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
 <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
@@ -63,7 +68,7 @@
 </div><img id="pDepois"></div>
 </div>
 <div class="rodape">
-<div class="q"><b>HORÁRIOS</b><br>Chegada: <input type="time"><br>Saída: <input type="time"><br>Desloc.: <input type="text"><br>Hrs: <input type="number"></div>
+<div class="q"><b>HORÁRIOS</b><br>Saída oficina: <input type="time"><br>Chegada cliente: <input type="time"><br>Saída cliente: <input type="time"><br>Chegada oficina: <input type="time"></div>
 <div class="q"><b>ASSINATURA RESPONSÁVEL</b><br><canvas id="sigCanvas"></canvas><br><button type="button" class="btn-limpar no-print" onclick="limparAssinatura()">Limpar assinatura</button></div>
 <div class="q"><b>STATUS</b><br><label><input type="checkbox"> LIBERADO</label><br><label><input type="checkbox"> PARADO</label><br><br>Técnico:<input type="text"></div>
 </div>
@@ -100,7 +105,6 @@ const folha=document.getElementById('folha');
 const c1=await html2canvas(folha,{scale:2,useCORS:true,logging:false});
 let w1=pageW-margin*2,h1=(c1.height*w1)/c1.width;if(h1>pageH-margin*2){h1=pageH-margin*2;w1=(c1.width*h1)/c1.height;}
 pdf.addImage(c1.toDataURL('image/jpeg',0.85),'JPEG',(pageW-w1)/2,margin,w1,h1);
-const srcAntes=document.getElementById('pAntes').src;const srcDepois=document.getElementById('pDepois').src;
 const temAntes=document.getElementById('pAntes').style.display==='block';const temDepois=document.getElementById('pDepois').style.display==='block';
 const pagFotos=document.getElementById('paginaFotos');
 document.getElementById('numOSFoto').textContent=document.getElementById('numOS').value||'';
@@ -108,7 +112,7 @@ const imgA=document.getElementById('imgAntesPDF');const imgD=document.getElement
 document.getElementById('semAntes').style.display=temAntes?'none':'block';
 document.getElementById('semDepois').style.display=temDepois?'none':'block';
 imgA.style.display=temAntes?'block':'none';imgD.style.display=temDepois?'block':'none';
-if(temAntes)imgA.src=srcAntes;if(temDepois)imgD.src=srcDepois;
+if(temAntes)imgA.src=document.getElementById('pAntes').src;if(temDepois)imgD.src=document.getElementById('pDepois').src;
 pagFotos.style.display='block';await new Promise(r=>setTimeout(r,300));
 pdf.addPage();
 const c2=await html2canvas(pagFotos,{scale:2,useCORS:true,logging:false});
