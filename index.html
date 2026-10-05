@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OS - BETHEC Empilhadeiras</title>
 <link rel="stylesheet" href="style.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="folha" id="folha">
@@ -13,7 +14,6 @@
 <img src="logo.png" alt="BETHEC EMPILHADEIRAS">
 <div class="info">BETHEC Peças e assistência técnica para empilhadeiras<br>EMAIL: bethecemp@outlook.com<br>CNPJ: 65.940.241/0001-66<br>Telefone: 15 99129-6558 - Sorocaba/SP</div>
 </div>
-
 <div class="box">
 <div>Empresa:<br><input type="text"></div>
 <div>Data:<br><input type="date"></div>
@@ -27,7 +27,6 @@
 <div>Nº OS:<br><input type="text" id="numOS"></div>
 <div class="tipos"><strong>Tipo:</strong><label><input type="radio" name="tipo"> Corretiva</label><label><input type="radio" name="tipo"> Preventiva</label><label><input type="checkbox"> Orçamento</label></div>
 </div>
-
 <h3>Peças aplicadas</h3>
 <table>
 <tr><th style="width:15%">Qntd</th><th style="width:25%">Código</th><th>Descrição</th></tr>
@@ -42,7 +41,6 @@
 <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
 <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
 </table>
-
 <h3>Descrição da mão de obra</h3>
 <table>
 <tr><td><textarea rows="1" placeholder="Descreva o serviço..."></textarea></td></tr>
@@ -52,7 +50,6 @@
 <tr><td><textarea rows="1"></textarea></td></tr>
 <tr><td><textarea rows="1"></textarea></td></tr>
 </table>
-
 <div class="no-print fotos">
 <div class="foto"><strong>📸 FOTO ANTES</strong>
 <div class="foto-btns">
@@ -65,69 +62,61 @@
 <label class="galeria">📎 Galeria<input type="file" id="fDepoisGal" accept="image/*"></label>
 </div><img id="pDepois"></div>
 </div>
-
 <div class="rodape">
 <div class="q"><b>HORÁRIOS</b><br>Chegada: <input type="time"><br>Saída: <input type="time"><br>Desloc.: <input type="text"><br>Hrs: <input type="number"></div>
 <div class="q"><b>ASSINATURA RESPONSÁVEL</b><br><canvas id="sigCanvas"></canvas><br><button type="button" class="btn-limpar no-print" onclick="limparAssinatura()">Limpar assinatura</button></div>
 <div class="q"><b>STATUS</b><br><label><input type="checkbox"> LIBERADO</label><br><label><input type="checkbox"> PARADO</label><br><br>Técnico:<input type="text"></div>
 </div>
-
 <div class="no-print" id="botoes">
 <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
-<button class="btn black" onclick="gerarPDF()">📄 Gerar PDF (1 página)</button>
+<button class="btn black" onclick="gerarPDF()">📄 Gerar PDF (2 páginas)</button>
 </div>
 </div>
-
+<div class="folha pagina-fotos" id="paginaFotos" style="display:none;">
+<h3>Registro Fotográfico - OS <span id="numOSFoto"></span></h3>
+<div class="foto-pdf"><p><strong>ANTES</strong></p><img id="imgAntesPDF"><p id="semAntes">Nenhuma foto enviada</p></div>
+<div class="foto-pdf"><p><strong>DEPOIS</strong></p><img id="imgDepoisPDF"><p id="semDepois">Nenhuma foto enviada</p></div>
+</div>
 <script>
-function bindFoto(inputId, imgId){
-  document.getElementById(inputId).addEventListener('change', function(){
-    const f=this.files[0]; if(!f) return;
-    const r=new FileReader();
-    r.onload=e=>{const im=document.getElementById(imgId); im.src=e.target.result; im.style.display='block';};
-    r.readAsDataURL(f);
-  });
-}
-bindFoto('fAntesCam','pAntes'); bindFoto('fAntesGal','pAntes');
-bindFoto('fDepoisCam','pDepois'); bindFoto('fDepoisGal','pDepois');
-
-const canvas=document.getElementById('sigCanvas');
-const ctx=canvas.getContext('2d');
-let desenhando=false;
-function initCanvas(){
-  const rect=canvas.getBoundingClientRect();
-  if(canvas.width===300){
-    canvas.width=rect.width*2; canvas.height=280; ctx.scale(2,2);
-  }
-  ctx.lineWidth=2; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#000';
-}
-window.addEventListener('load', initCanvas);
-function getPos(e){const r=canvas.getBoundingClientRect(); const t=e.touches?e.touches[0]:e; return{x:t.clientX-r.left,y:t.clientY-r.top};}
-canvas.addEventListener('mousedown',e=>{desenhando=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);});
-canvas.addEventListener('mousemove',e=>{if(!desenhando)return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke();});
+function bindFoto(inputId,imgId){document.getElementById(inputId).addEventListener('change',function(){const f=this.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{const im=document.getElementById(imgId);im.src=e.target.result;im.style.display='block';};r.readAsDataURL(f);});}
+bindFoto('fAntesCam','pAntes');bindFoto('fAntesGal','pAntes');bindFoto('fDepoisCam','pDepois');bindFoto('fDepoisGal','pDepois');
+const canvas=document.getElementById('sigCanvas');const ctx=canvas.getContext('2d');let desenhando=false;
+function initCanvas(){const rect=canvas.getBoundingClientRect();if(canvas.width===300){canvas.width=rect.width*2;canvas.height=280;ctx.scale(2,2);}ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#000';}
+window.addEventListener('load',initCanvas);
+function getPos(e){const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}
+canvas.addEventListener('mousedown',e=>{desenhando=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+canvas.addEventListener('mousemove',e=>{if(!desenhando)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();});
 window.addEventListener('mouseup',()=>desenhando=false);
-canvas.addEventListener('touchstart',e=>{e.preventDefault(); desenhando=true; const p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y);},{passive:false});
-canvas.addEventListener('touchmove',e=>{e.preventDefault(); if(!desenhando)return; const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke();},{passive:false});
-canvas.addEventListener('touchend',e=>{e.preventDefault(); desenhando=false;},{passive:false});
-function limparAssinatura(){ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,canvas.width,canvas.height); ctx.restore();}
-
-function gerarPDF(){
-  const botoes=document.getElementById('botoes'); botoes.style.display='none';
-  const elemento=document.getElementById('folha');
-  const opt={margin:0,filename:'OS-BETHEC-'+(document.getElementById('numOS').value||Date.now())+'.pdf',image:{type:'jpeg',quality:0.85},html2canvas:{scale:2,useCORS:true,scrollY:0},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
-  html2pdf().set(opt).from(elemento).toCanvas().get('canvas').then(function(cnv){
-    const imgData=cnv.toDataURL('image/jpeg',0.85);
-    const pdf=new jspdf.jsPDF('p','mm','a4');
-    const pageW=210, pageH=297, margin=5;
-    const imgW=pageW-margin*2;
-    const imgH=(cnv.height*imgW)/cnv.width;
-    const finalH=Math.min(imgH,pageH-margin*2);
-    const finalW=(cnv.width*finalH)/cnv.height;
-    const x=(pageW-finalW)/2;
-    pdf.addImage(imgData,'JPEG',x,margin,finalW,finalH);
-    pdf.save(opt.filename);
-    botoes.style.display='flex';
-  });
-}
+canvas.addEventListener('touchstart',e=>{e.preventDefault();desenhando=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();if(!desenhando)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();},{passive:false});
+canvas.addEventListener('touchend',e=>{e.preventDefault();desenhando=false;},{passive:false});
+function limparAssinatura(){ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.restore();}
+async function gerarPDF(){
+const botoes=document.getElementById('botoes');botoes.style.display='none';await new Promise(r=>setTimeout(r,300));
+try{
+const nome='OS-BETHEC-'+(document.getElementById('numOS').value||Date.now())+'.pdf';
+const {jsPDF}=window.jspdf;const pdf=new jsPDF('p','mm','a4');const pageW=210,pageH=297,margin=5;
+const folha=document.getElementById('folha');
+const c1=await html2canvas(folha,{scale:2,useCORS:true,logging:false});
+let w1=pageW-margin*2,h1=(c1.height*w1)/c1.width;if(h1>pageH-margin*2){h1=pageH-margin*2;w1=(c1.width*h1)/c1.height;}
+pdf.addImage(c1.toDataURL('image/jpeg',0.85),'JPEG',(pageW-w1)/2,margin,w1,h1);
+const srcAntes=document.getElementById('pAntes').src;const srcDepois=document.getElementById('pDepois').src;
+const temAntes=document.getElementById('pAntes').style.display==='block';const temDepois=document.getElementById('pDepois').style.display==='block';
+const pagFotos=document.getElementById('paginaFotos');
+document.getElementById('numOSFoto').textContent=document.getElementById('numOS').value||'';
+const imgA=document.getElementById('imgAntesPDF');const imgD=document.getElementById('imgDepoisPDF');
+document.getElementById('semAntes').style.display=temAntes?'none':'block';
+document.getElementById('semDepois').style.display=temDepois?'none':'block';
+imgA.style.display=temAntes?'block':'none';imgD.style.display=temDepois?'block':'none';
+if(temAntes)imgA.src=srcAntes;if(temDepois)imgD.src=srcDepois;
+pagFotos.style.display='block';await new Promise(r=>setTimeout(r,300));
+pdf.addPage();
+const c2=await html2canvas(pagFotos,{scale:2,useCORS:true,logging:false});
+let w2=pageW-margin*2,h2=(c2.height*w2)/c2.width;if(h2>pageH-margin*2){h2=pageH-margin*2;w2=(c2.width*h2)/c2.height;}
+pdf.addImage(c2.toDataURL('image/jpeg',0.90),'JPEG',(pageW-w2)/2,margin,w2,h2);
+pagFotos.style.display='none';pdf.save(nome);
+}catch(e){console.error(e);alert('Erro ao gerar PDF: '+e.message);}
+botoes.style.display='flex';}
 document.getElementById('numOS').value=Math.floor(Math.random()*9000+1000);
 </script>
 </body>
